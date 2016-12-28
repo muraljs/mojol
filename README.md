@@ -1,6 +1,6 @@
 # mojol
 
-Data modeling library integrating [**Mo**ngoDB](https://www.mongodb.com/), **Jo**i(https://github.com/hapijs/joi), and [GraphQ**L**](http://graphql.org/).
+Data modeling library integrating **Mo**ngoDB, **Jo**i, and GraphQ**L**.
 
 ## Example
 
