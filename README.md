@@ -5,106 +5,24 @@ Data modeling library integrating **Mo**ngoDB, **Jo**i, and GraphQ**L**.
 ## Example
 
 ````javascript
-const express = require('express')
 const mojol = require('mojol')
-const { string, date } = mojol
 
-// Describe the schema of your model's document
-const user = mojol.model('user', {
+const user = mojol.model('User')
 
-  // Add validation to fields with Joi
-  email: string().email(),
-
-  // Conditionally validate based on the CRUDL operations
-  name: string().on('create').required(),
-})
-
-const tweet = mojol.model('tweet', {
-  body: string().max(150)
-    .on('create update').required(),
-  userId: objectid()
-    .on('create update').forbidden(),
-  user: user.schema
-    .on('create update delete').forbidden(),
-  createdAt: date().forbidden()
-    .on('create').default(new Date())
-})
-
-
-// Add some business logic through Koa-like middleware
-const onlyOwner = async (ctx, next) => {
-  if (ctx.user._id !== ctx.args._id) throw new Error('Unauthorized')
-  else next()
-}
-
-const setOwner = async (ctx, next) => {
-  ctx.args.userId = ctx.user._id
-  next()
-}
-
-const congratulate = async (ctx, next) => {
-  console.log(`Creating tweet ${ctx.args}...`)
-  await next()
-  console.log(`Congrats on your first tweet ${ctx.res.body}!`)
-}
-
-const joinUser = async (ctx, next) => {
-  if (!ctx.fields.user) return next()
-  await next()
-  ctx.res.user = await ctx.db.users.findOne({ _id: ctx.res.userId })
-}
-
-const joinUsers = async (ctx, next) => {
-  if (!ctx.fields.user) return next()
-  await next()
-  const userIds = ctx.res.map((t) => t.userId)
-  const users = await ctx.db.users.findOne({ _id: { $in: userIds } })
-  ctx.res.forEach((t, i) => t.user = users[i])
-}
-
-const deleteTweets = async (ctx, next) => {
-  await next()
-  await ctx.db.tweets.remove({ userId: ctx.args._id })
-  console.log(`Deleted tweets for ${ctx.res.name}`)
-}
-
-tweet.on('read', joinUser)
-tweet.on('list', joinUsers)
-tweet.on('delete update', onlyOwner)
-tweet.on('create', setOwner, congratulate)
-user.on('delete', deleteTweets)
-
-// Create an api object and mount top-level middleware along with models
-const api = mojol()
-
-const logger = async (ctx, next) => {
-  const start = new Date().getTime()
-  await next()
-  console.log(`Full request took ${start - new Date().getTime()}`)
-}
-
-const auth = async (ctx, next) => {
-  const token = ctx.http.get('Authorization: Token')
-  const { error } = jwt.verify(token, SECRET)
-  if (err) throw err
-  else ctx.user = jwt.parse(token)
-  next()
-}
-
-api.use(logger, auth, tweet, user)
-
-
-// Connect to Mongo and your GraphQL adapter
-mojol.connect('mongodb://localhost:27017/test')
-
-const app = express()
-
-app.use('/', graphqlHTTP({
-  schema: api.schema,
-  graphiql: true
+user.attrs(({ string, id }) => ({
+  email: string().email()
+    .on('create').required(),
+  name: string()
+    .on('create').required()
 }))
 
-app.listen(3000, () => console.log('listening on 3000'))
+const congratulate = async (ctx, next) => {
+  console.log(`Creating user ${ctx.args.name}...`)
+  await next()
+  console.log(`Congrats on joining ${ctx.res.name}!`)
+}
+
+user.on('create', congratulate)
 ````
 
 ## API
