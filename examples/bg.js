@@ -3,7 +3,7 @@ const {
   model,
   string
 } = require('../')
-connect('mongodb://localhost:27017/joiql-mongo')
+connect('mongodb://localhost:27017/mojol')
 
 const tweet = model('tweet', {
   body: string()

@@ -1,29 +1,49 @@
 {
-  "name": "joiql-mongo",
-  "version": "1.0.9",
-  "description": "Data modeling library using JoiQL and Mongo",
+  "name": "mojol",
+  "version": "0.0.1",
+  "description": "Data modeling library integrating MongoDB, Joi, and GraphQL.",
   "main": "index.js",
   "scripts": {
     "test": "mocha -r should",
-    "mochag": "mocha -r should test.js -g"
+    "mochag": "mocha -r should test.js -g",
+    "node": "node -r babel-core/register"
+  },
+  "standard": {
+    "parser": "babel-eslint"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-3"
+    ],
+    "env": {
+      "test": {
+        "plugins": [
+          "rewire"
+        ]
+      }
+    },
+    "plugins": [
+      "transform-runtime"
+    ]
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/craigspaeth/joiql-mongo.git"
+    "url": "git+https://github.com/craigspaeth/mojol.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/craigspaeth/joiql-mongo/issues"
+    "url": "https://github.com/craigspaeth/mojol/issues"
   },
-  "homepage": "https://github.com/craigspaeth/joiql-mongo#readme",
+  "homepage": "https://github.com/craigspaeth/mojol#readme",
   "peerDependencies": {
     "graphql": "^0.7.0"
   },
   "dependencies": {
     "joi": "^9.0.4",
-    "joiql": "0.0.9",
-    "koa-compose": "^3.1.0",
+    "joiql": "^0.1.2",
+    "koa-compose": "^3.2.1",
     "koa-convert": "^1.2.0",
     "koa-graphql": "^0.5.6",
     "lodash": "^4.15.0",
@@ -31,8 +51,14 @@
     "promised-mongo": "^1.2.0"
   },
   "devDependencies": {
+    "babel-core": "^6.21.0",
+    "babel-eslint": "^7.1.1",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-3": "^6.17.0",
     "express": "^4.14.0",
     "express-graphql": "^0.5.4",
+    "jsonwebtoken": "^7.2.1",
     "mocha": "^3.0.2",
     "should": "^11.1.0",
     "sinon": "^1.17.5"
