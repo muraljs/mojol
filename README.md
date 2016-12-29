@@ -29,6 +29,11 @@ user.on('create', congratulate)
 
 TBD
 
+## TODO
+
+* `model.use` plugin API
+* `api.use({ schema: string(), resolve: () => })` plugin API
+
 ## Contributing
 
 Please fork the project and submit a pull request with tests. Install node modules `npm install` and run tests with `npm test`.

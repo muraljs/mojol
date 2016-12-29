@@ -1,22 +1,28 @@
 const express = require('express')
-const mojol = require('../')
+const {
+  model,
+  connect,
+  graphqlize,
+  string,
+  date
+} = require('../')
 const graphqlHTTP = require('express-graphql')
 
 // Describe the schema of your model's document
-const user = mojol.model('User')
+const user = model('User')
 
-user.attrs(({ string }) => ({
+user.attrs({
 
   // Add validation to fields with Joi
   email: string().email(),
 
   // Conditionally validate based on the CRUDL operations
   name: string().on('create').required()
-}))
+})
 
-const tweet = mojol.model('Tweet')
+const tweet = model('Tweet')
 
-tweet.attrs(({ string, id, date }) => ({
+tweet.attrs({
   body: string().max(150)
     .on('create update').required(),
   userId: string()
@@ -26,7 +32,7 @@ tweet.attrs(({ string, id, date }) => ({
     .on('create update delete').forbidden(),
   createdAt: date().forbidden()
     .on('create').default(new Date())
-}))
+})
 
 // Add some business logic through Koa-like middleware
 const onlyOwner = async (ctx, next) => {
@@ -55,11 +61,10 @@ tweet.on('create', setOwner, congratulate)
 user.on('delete', deleteTweets)
 
 // Create an api object and mount models
-const api = mojol()
-api.use(tweet, user)
+const schema = graphqlize(tweet, user)
 
 // Connect to Mongo and hook in Express GraphQL
-mojol.connect('mongodb://localhost:27017/test')
+connect('mongodb://localhost:27017/test')
 
 const app = express()
 
@@ -68,7 +73,7 @@ app.use((req, res, next) => {
   next()
 })
 app.use('/', graphqlHTTP({
-  schema: api.schema(),
+  schema: schema,
   graphiql: true,
   formatError: (err) => {
     console.log(err)

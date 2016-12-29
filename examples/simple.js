@@ -1,15 +1,16 @@
 const express = require('express')
-const mojol = require('../')
 const graphqlHTTP = require('express-graphql')
+const { model, string, connect, graphqlize } = require('../')
 
 // Model
-const user = mojol.model('User')
-user.attrs(({ string, id }) => ({
+const user = model('User')
+
+user.attrs({
   email: string().email()
     .on('create').required(),
   name: string()
     .on('create').required()
-}))
+})
 
 const congratulate = async (ctx, next) => {
   console.log(`Creating user ${JSON.stringify(ctx.args)}...`)
@@ -19,15 +20,15 @@ const congratulate = async (ctx, next) => {
 
 user.on('create', congratulate)
 
-// API
-const api = mojol()
-api.use(user)
+// Create GraphQL API
+const schema = graphqlize(user)
 
-// Connect & boot server
+// Connect to database & boot web server
+connect('mongodb://localhost:27017/test')
+
 const app = express()
-mojol.connect('mongodb://localhost:27017/test')
 app.use('/', graphqlHTTP({
-  schema: api.schema(),
+  schema: schema,
   graphiql: true,
   formatError: (err) => {
     console.log(err)

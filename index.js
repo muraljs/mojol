@@ -3,11 +3,11 @@ const joiql = require('joiql')
 const mongo = require('promised-mongo')
 const pluralize = require('pluralize')
 const compose = require('koa-compose')
-const { camelCase, includes } = require('lodash')
+const { camelCase, mapValues, each } = require('lodash')
 
 module.exports.db = {}
 
-joi.id = joi.extend({
+const idType = joi.extend({
   base: joi.string(),
   name: 'string',
   pre: (val, state, options) => {
@@ -16,34 +16,64 @@ joi.id = joi.extend({
   }
 }).string
 
-const wrappedJoiType = (type, method) => {
+const wrappedJoiType = (type) => {
   return (...typeArgs) => {
-    const schema = joi[type](...typeArgs)
-    const prototype = Object.getPrototypeOf(schema)
-    prototype.on = function (methods) {
-      const stub = new Proxy({}, { get: () => () => this })
-      if (includes(methods, method)) return this
-      else return stub
+    const schema = () =>
+      type === 'id'
+        ? idType(...typeArgs)
+        : joi[type](...typeArgs)
+    let schemas = {
+      all: schema(),
+      create: schema(),
+      read: schema(),
+      update: schema(),
+      delete: schema(),
+      list: schema()
     }
-    return schema
+    let curSchemas = ['all']
+    const proxy = new Proxy({}, {
+      get: (_, key) => {
+        return (...args) => {
+          if (key === 'on') {
+            curSchemas = args[0].split(' ')
+          } else if (key === 'schema') {
+            return schemas[args[0]]
+          } else if (key === 'describe') {
+            return schemas.all.describe(...args)
+          } else {
+            curSchemas.forEach((k) => {
+              if (k === 'all') {
+                each(schemas, (v, k) => {
+                  schemas[k] = schemas[k][key](...args)
+                })
+              } else schemas[k] = schemas[k][key](...args)
+            })
+          }
+          return proxy
+        }
+      }
+    })
+    return proxy
   }
 }
 
-module.exports = () => {
+module.exports.id = wrappedJoiType('id')
+module.exports.string = wrappedJoiType('string')
+module.exports.boolean = wrappedJoiType('boolean')
+module.exports.number = wrappedJoiType('number')
+module.exports.object = wrappedJoiType('object')
+module.exports.date = wrappedJoiType('date')
+
+module.exports.graphqlize = (...models) => {
   const joiqlSchema = { query: {}, mutation: {} }
-  const use = (...models) => {
-    models.forEach((model) => {
-      joiqlSchema.mutation[`create${model.singular}`] = model.schema().create
-      joiqlSchema.query[camelCase(model.singular)] = model.schema().read
-      joiqlSchema.mutation[`update${model.singular}`] = model.schema().update
-      joiqlSchema.mutation[`delete${model.singular}`] = model.schema().delete
-      joiqlSchema.query[camelCase(model.plural)] = model.schema().list
-    })
-  }
-  const schema = () => {
-    return joiql(joiqlSchema)
-  }
-  return { use, schema }
+  models.forEach((model) => {
+    joiqlSchema.mutation[`create${model.singular}`] = model.schema().create
+    joiqlSchema.query[camelCase(model.singular)] = model.schema().read
+    joiqlSchema.mutation[`update${model.singular}`] = model.schema().update
+    joiqlSchema.mutation[`delete${model.singular}`] = model.schema().delete
+    joiqlSchema.query[camelCase(model.plural)] = model.schema().list
+  })
+  return joiql(joiqlSchema)
 }
 
 module.exports.connect = (url, collections) => {
@@ -69,7 +99,6 @@ module.exports.model = (singular) => {
       next()
     }],
     delete: [async (ctx, next) => {
-      console.log('deleting', ctx.args)
       ctx.res = await col().remove(ctx.args)
       next()
     }],
@@ -89,31 +118,22 @@ module.exports.model = (singular) => {
     }
     return compose(middlewares[method])(ctx).then(() => ctx.res)
   }
-  const attrs = (getAttrs) => {
-    const getSchemaObj = (method) => {
-      const attrs = getAttrs({
-        id: wrappedJoiType('id', method),
-        string: wrappedJoiType('string', method),
-        boolean: wrappedJoiType('boolean', method),
-        number: wrappedJoiType('number', method),
-        object: wrappedJoiType('object', method),
-        date: wrappedJoiType('date', method)
-      })
-      if (!attrs._id) {
-        attrs._id = wrappedJoiType('id', method)()
-        attrs._id.on('delete update').required()
-      }
-      return attrs
+  const attrs = (attrs) => {
+    if (!attrs._id) {
+      attrs._id = wrappedJoiType('id')()
+      attrs._id.on('delete update').required()
     }
+    const schemaObj = (method = 'all') =>
+      mapValues(attrs, (attr) => attr.schema(method))
     const args = {
-      create: getSchemaObj('create'),
-      read: getSchemaObj('read'),
-      update: getSchemaObj('update'),
-      delete: getSchemaObj('delete'),
-      list: getSchemaObj('list')
+      create: schemaObj('create'),
+      read: schemaObj('read'),
+      update: schemaObj('update'),
+      delete: schemaObj('delete'),
+      list: schemaObj('list')
     }
-    const fields = joi.object(getSchemaObj())
-    attributes = wrappedJoiType('object')(getSchemaObj())
+    const fields = joi.object(schemaObj())
+    attributes = wrappedJoiType('object')(schemaObj())
     schema.create = fields.meta({
       args: args.create,
       resolve: resolver('create')
