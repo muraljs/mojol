@@ -16,7 +16,7 @@ const idType = joi.extend({
   }
 }).string
 
-const wrappedJoiType = (type) => {
+const wrapJoiType = (type) => {
   return (...typeArgs) => {
     const schema = () =>
       type === 'id'
@@ -57,12 +57,12 @@ const wrappedJoiType = (type) => {
   }
 }
 
-module.exports.id = wrappedJoiType('id')
-module.exports.string = wrappedJoiType('string')
-module.exports.boolean = wrappedJoiType('boolean')
-module.exports.number = wrappedJoiType('number')
-module.exports.object = wrappedJoiType('object')
-module.exports.date = wrappedJoiType('date')
+module.exports.id = wrapJoiType('id')
+module.exports.string = wrapJoiType('string')
+module.exports.boolean = wrapJoiType('boolean')
+module.exports.number = wrapJoiType('number')
+module.exports.object = wrapJoiType('object')
+module.exports.date = wrapJoiType('date')
 
 module.exports.graphqlize = (...models) => {
   const joiqlSchema = { query: {}, mutation: {} }
@@ -120,7 +120,7 @@ module.exports.model = (singular) => {
   }
   const attrs = (attrs) => {
     if (!attrs._id) {
-      attrs._id = wrappedJoiType('id')()
+      attrs._id = wrapJoiType('id')()
       attrs._id.on('delete update').required()
     }
     const schemaObj = (method = 'all') =>
@@ -133,7 +133,7 @@ module.exports.model = (singular) => {
       list: schemaObj('list')
     }
     const fields = joi.object(schemaObj())
-    attributes = wrappedJoiType('object')(schemaObj())
+    attributes = wrapJoiType('object')(schemaObj())
     schema.create = fields.meta({
       args: args.create,
       resolve: resolver('create')

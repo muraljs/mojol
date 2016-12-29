@@ -5,16 +5,19 @@ Data modeling library integrating **Mo**ngoDB, **Jo**i, and GraphQ**L**.
 ## Example
 
 ````javascript
-const mojol = require('mojol')
+const { model, string, id } = require('mojol')
 
-const user = mojol.model('User')
+const user = model('User')
 
-user.attrs(({ string, id }) => ({
+user.attrs({
+  _id: id()
+    .on('create').forbidden()
+    .on('update delete').required(),
   email: string().email()
     .on('create').required(),
   name: string()
     .on('create').required()
-}))
+})
 
 const congratulate = async (ctx, next) => {
   console.log(`Creating user ${ctx.args.name}...`)
@@ -32,7 +35,7 @@ TBD
 ## TODO
 
 * `model.use` plugin API
-* `api.use({ schema: string(), resolve: () => })` plugin API
+* Ad-hoc queries and mutations API
 
 ## Contributing
 
