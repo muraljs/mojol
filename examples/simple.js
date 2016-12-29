@@ -3,9 +3,7 @@ const graphqlHTTP = require('express-graphql')
 const { model, string, id, connect, graphqlize } = require('../')
 
 // Model
-const user = model('User')
-
-user.attrs({
+const user = model('User', {
   _id: id()
     .on('create').forbidden()
     .on('update delete').required(),

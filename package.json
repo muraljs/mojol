@@ -42,13 +42,14 @@
   },
   "dependencies": {
     "joi": "^9.0.4",
-    "joiql": "^0.1.2",
+    "joiql": "^0.1.3",
     "koa-compose": "^3.2.1",
     "koa-convert": "^1.2.0",
     "koa-graphql": "^0.5.6",
     "lodash": "^4.15.0",
     "pluralize": "^3.0.0",
-    "promised-mongo": "^1.2.0"
+    "promised-mongo": "^1.2.0",
+    "standard": "^8.6.0"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",

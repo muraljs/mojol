@@ -9,9 +9,7 @@ const {
 const graphqlHTTP = require('express-graphql')
 
 // Describe the schema of your model's document
-const user = model('User')
-
-user.attrs({
+const user = model('User', {
 
   // Add validation to fields with Joi
   email: string().email(),
@@ -20,9 +18,7 @@ user.attrs({
   name: string().on('create').required()
 })
 
-const tweet = model('Tweet')
-
-tweet.attrs({
+const tweet = model('Tweet', {
   body: string().max(150)
     .on('create update').required(),
   userId: string()

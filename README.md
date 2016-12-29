@@ -7,9 +7,7 @@ Data modeling library integrating **Mo**ngoDB, **Jo**i, and GraphQ**L**.
 ````javascript
 const { model, string, id } = require('mojol')
 
-const user = model('User')
-
-user.attrs({
+const user = model('User', {
   _id: id()
     .on('create').forbidden()
     .on('update delete').required(),
