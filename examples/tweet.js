@@ -4,7 +4,10 @@ const {
   connect,
   graphqlize,
   string,
-  date
+  array,
+  date,
+  query,
+  db
 } = require('../')
 const graphqlHTTP = require('express-graphql')
 
@@ -24,11 +27,16 @@ const tweet = model('Tweet', {
   userId: string()
     .on('create update').forbidden()
     .on('delete').required(),
-  user: user.attrs()
-    .on('create update delete').forbidden(),
   createdAt: date().forbidden()
     .on('create').default(new Date())
 })
+
+// Use ad-hoc queries and mutations
+const distinctUserNames = async (ctx, next) => {
+  ctx.res = await db.users.distince('name')
+  next()
+}
+const userNames = query('userNames', array().items(string()), distinctUserNames)
 
 // Add some business logic through Koa-like middleware
 const onlyOwner = async (ctx, next) => {
@@ -57,7 +65,7 @@ tweet.on('create', setOwner, congratulate)
 user.on('delete', deleteTweets)
 
 // Create an api object and mount models
-const schema = graphqlize(tweet, user)
+const schema = graphqlize(tweet, user, userNames)
 
 // Connect to Mongo and hook in Express GraphQL
 connect('mongodb://localhost:27017/test')

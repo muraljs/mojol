@@ -5,18 +5,24 @@ const db = require('./lib/db')
 const crudlType = require('./lib/crudl-type')
 const middlewares = require('./lib/middlewares')
 const attrsToSchemas = require('./lib/attrs-to-schemas')
+const adhoc = require('./lib/adhoc')
 
 // Export wrapped Joi type APIs
 module.exports.id = crudlType('id')
 module.exports.string = crudlType('string')
 module.exports.boolean = crudlType('boolean')
 module.exports.number = crudlType('number')
+module.exports.array = crudlType('array')
 module.exports.object = crudlType('object')
 module.exports.date = crudlType('date')
 
 // Connect and export our Mongo database
 module.exports.db = db.db
 module.exports.connect = db.connect
+
+// Ad-hoc query & mutation helpers
+module.exports.query = adhoc.query
+module.exports.mutation = adhoc.mutation
 
 // Given a list of models turn it into a GraphQL.js schema object
 module.exports.graphqlize = (...models) => {
@@ -53,7 +59,6 @@ module.exports.model = (singular, attrs) => {
   return {
     singular,
     plural,
-    attrs,
     schemas,
     on
   }
