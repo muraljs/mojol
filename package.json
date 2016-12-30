@@ -1,12 +1,12 @@
 {
   "name": "mojol",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Data modeling library integrating MongoDB, Joi, and GraphQL.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r should",
-    "mochag": "mocha -r should test.js -g",
-    "node": "node -r babel-core/register"
+    "test": "standard && mocha -r should",
+    "mocha": "mocha --watch -r should",
+    "example": "node -r babel-core/register"
   },
   "standard": {
     "parser": "babel-eslint"
@@ -48,8 +48,7 @@
     "koa-graphql": "^0.5.6",
     "lodash": "^4.15.0",
     "pluralize": "^3.0.0",
-    "promised-mongo": "^1.2.0",
-    "standard": "^8.6.0"
+    "promised-mongo": "^1.2.0"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
@@ -61,7 +60,9 @@
     "express-graphql": "^0.5.4",
     "jsonwebtoken": "^7.2.1",
     "mocha": "^3.0.2",
+    "rewire": "^2.5.2",
     "should": "^11.1.0",
-    "sinon": "^1.17.5"
+    "sinon": "^1.17.6",
+    "standard": "^8.6.0"
   }
 }

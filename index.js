@@ -2,17 +2,17 @@ const joiql = require('joiql')
 const pluralize = require('pluralize')
 const { camelCase } = require('lodash')
 const db = require('./lib/db')
-const wrappedType = require('./lib/wrapped-type')
+const crudlType = require('./lib/crudl-type')
 const middlewares = require('./lib/middlewares')
 const attrsToSchemas = require('./lib/attrs-to-schemas')
 
 // Export wrapped Joi type APIs
-module.exports.id = wrappedType('id')
-module.exports.string = wrappedType('string')
-module.exports.boolean = wrappedType('boolean')
-module.exports.number = wrappedType('number')
-module.exports.object = wrappedType('object')
-module.exports.date = wrappedType('date')
+module.exports.id = crudlType('id')
+module.exports.string = crudlType('string')
+module.exports.boolean = crudlType('boolean')
+module.exports.number = crudlType('number')
+module.exports.object = crudlType('object')
+module.exports.date = crudlType('date')
 
 // Connect and export our Mongo database
 module.exports.db = db.db
