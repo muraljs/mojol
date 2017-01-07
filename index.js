@@ -1,11 +1,14 @@
-const joiql = require('joiql')
 const pluralize = require('pluralize')
 const { camelCase } = require('lodash')
+const joiql = require('joiql')
 const db = require('./lib/db')
 const crudlType = require('./lib/crudl-type')
 const middlewares = require('./lib/middlewares')
 const attrsToSchemas = require('./lib/attrs-to-schemas')
 const adhoc = require('./lib/adhoc')
+const mount = require('koa-mount')
+const convert = require('koa-convert')
+const graphqlHTTP = require('koa-graphql')
 
 // Export wrapped Joi type APIs
 module.exports.id = crudlType('id')
@@ -16,15 +19,13 @@ module.exports.array = crudlType('array')
 module.exports.object = crudlType('object')
 module.exports.date = crudlType('date')
 
-// Connect and export our Mongo database
+// Export APIs for database connection, adhoc schemas, and converting to graphql
 module.exports.connect = db.connect
-
-// Ad-hoc query & mutation helpers
 module.exports.query = adhoc.query
 module.exports.mutation = adhoc.mutation
 
 // Given a list of models turn it into a GraphQL.js schema object
-module.exports.graphqlize = (...models) => {
+const graphqlize = module.exports.graphqlize = (...models) => {
   const joiqlSchema = { query: {}, mutation: {} }
   models.forEach((model) => {
     if (model.type === 'model') {
@@ -40,6 +41,12 @@ module.exports.graphqlize = (...models) => {
     }
   })
   return joiql(joiqlSchema)
+}
+
+// Convert a list of models directly into Koa2 middleware
+module.exports.koaize = (route, ...models) => {
+  const schema = graphqlize(...models)
+  return mount(route, convert(graphqlHTTP({ schema, graphiql: true })))
 }
 
 // Factory function that creates a model object.
