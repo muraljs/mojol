@@ -17,7 +17,6 @@ module.exports.object = crudlType('object')
 module.exports.date = crudlType('date')
 
 // Connect and export our Mongo database
-module.exports.db = db.db
 module.exports.connect = db.connect
 
 // Ad-hoc query & mutation helpers
@@ -28,11 +27,17 @@ module.exports.mutation = adhoc.mutation
 module.exports.graphqlize = (...models) => {
   const joiqlSchema = { query: {}, mutation: {} }
   models.forEach((model) => {
-    joiqlSchema.mutation[`create${model.singular}`] = model.schemas.create
-    joiqlSchema.query[camelCase(model.singular)] = model.schemas.read
-    joiqlSchema.mutation[`update${model.singular}`] = model.schemas.update
-    joiqlSchema.mutation[`delete${model.singular}`] = model.schemas.delete
-    joiqlSchema.query[camelCase(model.plural)] = model.schemas.list
+    if (model.type === 'model') {
+      joiqlSchema.mutation[`create${model.singular}`] = model.schemas.create
+      joiqlSchema.query[camelCase(model.singular)] = model.schemas.read
+      joiqlSchema.mutation[`update${model.singular}`] = model.schemas.update
+      joiqlSchema.mutation[`delete${model.singular}`] = model.schemas.delete
+      joiqlSchema.query[camelCase(model.plural)] = model.schemas.list
+    } else if (model.type === 'query') {
+      joiqlSchema.query[model.name] = model.schema
+    } else if (model.type === 'mutation') {
+      joiqlSchema.mutation[model.name] = model.schema
+    }
   })
   return joiql(joiqlSchema)
 }
@@ -57,6 +62,7 @@ module.exports.model = (singular, attrs) => {
   const { resolver, on } = middlewares(camelCase(plural))
   const schemas = attrsToSchemas(attrs, resolver)
   return {
+    type: 'model',
     singular,
     plural,
     schemas,

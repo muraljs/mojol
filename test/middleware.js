@@ -17,7 +17,7 @@ describe('middlewares', () => {
       remove: sinon.stub().returns(Promise.resolve()),
       find: sinon.stub().returns(Promise.resolve())
     }
-    middlewares.__set__('collection', () => collection)
+    middlewares.__set__('db', { db: ({ foo: collection }) })
     m = middlewares('foo')
   })
 

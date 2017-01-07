@@ -33,7 +33,6 @@ TBD
 ## TODO
 
 * `model.use` plugin API
-* Ad-hoc queries and mutations API
 
 ## Contributing
 

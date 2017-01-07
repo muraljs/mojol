@@ -3,11 +3,12 @@ const {
   model,
   connect,
   graphqlize,
+  id,
   string,
   array,
   date,
   query,
-  db
+  mutation
 } = require('../')
 const graphqlHTTP = require('express-graphql')
 
@@ -33,10 +34,31 @@ const tweet = model('Tweet', {
 
 // Use ad-hoc queries and mutations
 const distinctUserNames = async (ctx, next) => {
-  ctx.res = await db.users.distince('name')
+  ctx.res = await ctx.db.users.distinct('name')
   next()
 }
-const userNames = query('userNames', array().items(string()), distinctUserNames)
+const userNames = query('userNames', {
+  fields: array().items(string()),
+  resolve: distinctUserNames
+})
+const confirmSent = async (ctx, next) => {
+  console.log('sending to', ctx.args.ids)
+  await next()
+  ctx.res = 'Success'
+  console.log('sent')
+}
+const sendEmailBlast = async (ctx, next) => {
+  const users = await ctx.db.users.find({ _id: { $in: ctx.args.ids } })
+  console.log('sending to', users.map((u) => u.name))
+  next()
+}
+const blastEmail = mutation('blastEmail', {
+  args: {
+    ids: array().items(id())
+  },
+  fields: string(),
+  resolve: [confirmSent, sendEmailBlast]
+})
 
 // Add some business logic through Koa-like middleware
 const onlyOwner = async (ctx, next) => {
@@ -65,7 +87,7 @@ tweet.on('create', setOwner, congratulate)
 user.on('delete', deleteTweets)
 
 // Create an api object and mount models
-const schema = graphqlize(tweet, user, userNames)
+const schema = graphqlize(tweet, user, userNames, blastEmail)
 
 // Connect to Mongo and hook in Express GraphQL
 connect('mongodb://localhost:27017/test')
