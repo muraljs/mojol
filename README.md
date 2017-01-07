@@ -5,7 +5,7 @@ Data modeling library integrating **Mo**ngoDB, **Jo**i, and GraphQ**L**.
 ## Example
 
 ````javascript
-const { model, string, id } = require('mojol')
+const { model, string, id, graphqlize } = require('mojol')
 
 const user = model('User', {
   _id: id()
@@ -24,6 +24,8 @@ const congratulate = async (ctx, next) => {
 }
 
 user.on('create', congratulate)
+
+const schema = graphqlize(user)
 ````
 
 ## API
